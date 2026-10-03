@@ -16,7 +16,7 @@ into normalized band weights.
 
 The improved F-Score technique is a band-weighting method that assigns to each band of a multiband image a degree of relevance, indicating the importance of that band within the multiband image. The works listed below describe this method in detail:
 
-- L'haddad, S., & Kemmouche, A. (2024, December) Hyperspectral Feature Selection using Improved F-Score Technique.
+- L'haddad, S., & Kemmouche, A. (2019, December) Hyperspectral Feature Selection using Improved F-Score Technique.
 - Alioua, N. E. H., L’Haddad, S., Kemmouche, A., Capolupo, A., & Tarantino, E. (2024, December). Classifying Remote Sensing Data Through Advanced Dimensionality Reduction Approaches. In Italian Conference on Geomatics and Geospatial Technologies (pp. 378-395). Cham: Springer Nature Switzerland.
 - Alioua, N. E. H., L’Haddad, S., Kemmouche, A., Capolupo, A., & Tarantino, E. (2025, June). Comparative Study of Different Constructions of Morphological Leveling Decompositions for Spatial Multi-scale Image Analysis. In International Conference on Computational Science and Its Applications (pp. 157-174). Cham: Springer Nature Switzerland.
 
