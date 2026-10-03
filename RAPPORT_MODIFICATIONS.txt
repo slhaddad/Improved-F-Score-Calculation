@@ -1,0 +1,175 @@
+RAPPORT DES MODIFICATIONS - IFS : Improved F-Score Calculation Program
+corrigé le 01-01-2019
+==================================================================================
+
+Méthode de référence : L'haddad, S., & Kemmouche, A. Hyperspectral Feature Selection using
+Improved F-Score Technique (2019).
+
+Formule appliquée pour chaque bande i (l classes, n_j pixels dans la classe j) :
+
+                    somme_j ( moy_ij - moy_i )^2
+   F_i = ----------------------------------------------------------
+          somme_j [ 1/(n_j - 1) * somme_k ( x_kij - moy_ij )^2 ]
+
+puis normalisation : w_i = F_i / somme_k F_k  (0 <= w_i <= 1, somme des w_i = 1).
+
+
+1. STRUCTURE DU PROJET
+----------------------
+Avant : projet Visual Studio 2015 au format .NET Framework 4.5.2, tous les fichiers à la racine.
+Après : même organisation que le projet AHP (SDK .NET 10, VS Code).
+
+  IFS.sln, global.json, .vscode\ (build, publish, clean, lancement F5), LISEZMOI.txt,
+  RAPPORT_MODIFICATIONS.txt, IFS\ (App.xaml, App.xaml.cs, MainWindow.xaml, MainWindow.xaml.cs,
+  IFS.csproj), Executable\ (IFS.exe), Scores of Bands\ (fichiers des scores).
+
+Fichiers et dossiers superflus supprimés (placés dans la Corbeille, donc récupérables) :
+  - App.config : configuration .NET Framework 4.5.2, inutile en .NET 10 ;
+  - Properties\ (AssemblyInfo.cs, Resources.resx, Resources.Designer.cs, Settings.settings,
+    Settings.Designer.cs) : fichiers générés par l'ancien modèle de projet, non utilisés ;
+  - bin\ et obj\ : anciens résultats de compilation ;
+  - ancien IFS.csproj et anciens App.xaml(.cs), MainWindow.xaml(.cs) à la racine, remplacés par
+    les fichiers corrigés du dossier IFS\.
+
+
+2. ERREURS DE COMPILATION
+-------------------------
+2.1 Le projet était au format .NET Framework 4.5.2 (ancien format Visual Studio 2015). Ce format
+    exige Visual Studio et le pack de ciblage .NET Framework 4.5.2 ; il ne se compile pas avec le
+    seul SDK .NET 10 utilisé sous VS Code pour les autres méthodes.
+    -> Nouveau IFS.csproj au format SDK (net10.0-windows, WPF), identique à celui de l'AHP, avec
+       la publication d'un exécutable autonome en un seul fichier.
+2.2 App.xaml.cs importait System.Configuration et System.Data, inutilisés (System.Configuration
+    n'est pas disponible par défaut en .NET 10). -> Imports supprimés.
+2.3 MainWindow.xaml.cs : « using » inutilisés supprimés (System.Linq, System.Windows.Shapes...) ; System.Drawing (GDI+) remplacé par la
+    lecture d'images de WPF (voir 4.2).
+Résultat : compilation sans aucun avertissement ni erreur (« 0 Avertissement(s), 0 Erreur(s) »).
+
+
+3. INCOHÉRENCES ENTRE LE CODE ET LA MÉTHODE (CORRIGÉES)
+-------------------------------------------------------
+3.1 Nombre de bandes figé à 3 (champs Image2, Image3, Image4, variables mat2/mat3/mat4,
+    ifs2/ifs3/ifs4). La méthode s'applique à toutes les bandes de l'image multibande.
+    -> Calcul pour un nombre quelconque de bandes (boucle sur les bandes, une bande en mémoire à la
+       fois, ce qui permet de traiter des images hyperspectrales de plusieurs centaines de bandes).
+
+3.2 Marge « es » (champ « E.S de taille (2i+1) x (2i+1) ») : les pixels situés à moins de es pixels
+    du bord étaient exclus. Cette marge vient du contexte spatial de la référence [10]
+    (caractéristiques issues du profil morphologique, dont les bords ne sont pas calculés). Dans la
+    méthode spectrale décrite, les caractéristiques sont les bandes d'origine : tous les pixels de
+    l'image classée sont utilisés. De plus, une marge trop grande donnait une division par zéro.
+    -> Marge et champ de saisie supprimés.
+
+3.3 Classe d'un seul pixel : la variance est divisée par (n_j - 1) = 0, ce qui produisait NaN et
+    rendait faux tous les scores.
+    -> Une classe de moins de 2 pixels est ignorée (signalée dans le fichier des scores). Il faut
+       au moins 2 classes de 2 pixels ou plus, sinon un message d'erreur clair est affiché.
+
+3.4 Sommes calculées en réel simple précision (float, 7 chiffres significatifs) : sur une grande
+    image, la somme des valeurs dépasse la précision du float et les moyennes deviennent fausses.
+    -> Tous les calculs en double précision (double).
+
+3.5 Dénominateur nul (toutes les classes homogènes dans une bande) : division par zéro.
+    -> Si les moyennes de classes diffèrent, la bande sépare parfaitement les classes : score
+       infini, et les bandes de score infini se partagent le poids total. Si les moyennes sont
+       égales, la bande n'apporte aucune information : score 0.
+
+3.6 Lecture des bandes limitée à 8 bits (canal rouge de System.Drawing) : les valeurs 16 bits ou
+    flottantes des images satellitaires étaient tronquées, ce qui faussait les moyennes et les
+    variances.
+    -> Lecture des valeurs radiométriques d'origine : 8 bits, 16 bits signés et non signés,
+       flottant 32 bits, et images ENVI (tous les types réels et entiers).
+
+3.7 Scores non normalisés.
+    -> Normalisation w_i = F_i / somme_k F_k : chaque score est entre 0 et 1 et leur somme vaut 1.
+
+3.8 Aucun contrôle des tailles : une bande de taille différente de l'image classée provoquait une
+    erreur d'exécution (plantage).
+    -> Contrôle des dimensions avec message clair. Plus généralement, toute erreur de lecture
+       affiche un message (nom du fichier et cause) au lieu de fermer le programme.
+
+Parties conformes à la méthode, conservées : une classe par couleur distincte de l'image classée
+(listes couleur / nbrCouleur), moyenne globale Xi de la bande, moyennes de classes moy[j],
+numérateur somme_j (moy[j] - Xi)^2, variances de classes den[j] / (n_j - 1), score num / denum.
+Les doubles boucles sur l'image pour chaque classe ont été regroupées en passes sur les pixels :
+les formules sont identiques, mais le temps de calcul ne dépend plus du nombre de classes.
+
+
+4. ENTRÉES (RÉCUPÉRATION DES DONNÉES)
+-------------------------------------
+4.1 Image multibande, au choix :
+    - un seul fichier ENVI .hdr : lecture de samples, lines, bands, header offset, data type
+      (1, 2, 3, 4, 5, 12, 13, 14, 15), interleave (BSQ, BIL, BIP), byte order, band names ; le
+      fichier de données est recherché sous le même nom (sans extension, ou .img, .dat, .raw,
+      .bsq, .bil, .bip...) et sa taille est contrôlée ;
+    - un ensemble de fichiers image (sélection multiple) : TIFF, PNG, BMP, GIF, JPEG ; une bande
+      par fichier, numérotée dans l'ordre des noms (ordre de l'Explorateur : B1, B2, ..., B10) ;
+      un TIFF multipage donne une bande par page.
+4.2 Image classée : TIFF, PNG, BMP, GIF, JPEG ou ENVI (.hdr, première bande). Chaque couleur
+    (image couleur) ou valeur (niveaux de gris 8/16 bits, palette, ENVI) distincte est une classe.
+    Un avertissement est affiché pour le JPEG, dont la compression crée de fausses classes.
+4.3 Les fichiers ne restent plus verrouillés après la lecture (l'ancien code ne libérait pas les
+    images ouvertes).
+
+
+5. SORTIES (GÉNÉRATION DES RÉSULTATS)
+-------------------------------------
+5.1 Dossier « Scores of Bands » juste sous le dossier du projet (celui qui contient IFS.sln),
+    créé automatiquement ; si l'exécutable est copié seul ailleurs : à côté de l'exécutable.
+5.2 Fichier IFS_Scores_<nom de l'image>.txt contenant :
+      Score of Band 1 noted IFS_1 is : 0.60606061
+      Score of Band 2 noted IFS_2 is : 0.00606061
+      ...
+      Sum of the scores : 1.00000000
+    ainsi que : la ligne des poids prête à coller dans les programmes AHP, PROMETHEE, TOPSIS...
+    (format 0,60606061;0,00606061;...), les valeurs brutes F_i avec le nom de chaque bande, et
+    la liste des classes avec leur nombre de pixels.
+5.3 Message de fin : « The scores (weights) obtained for the bands of the multiband image are
+    stored in the "Scores of Bands" file. », suivi du chemin du fichier. Les scores sont aussi
+    affichés dans la fenêtre.
+
+
+6. INTERFACE (MainWindow.xaml)
+------------------------------
+- Titre : « Improved F‑Score Calculation Program : EEIC’2019 University of Bejaia » (fenêtre et
+  en-tête), puis à la ligne : « Reference paper for the method: L’haddad, S., & Kemmouche, A.
+  Hyperspectral Feature Selection using Improved F‑Score Technique (2019). »
+- Option « Select a multiband image: either select a single image file containing all the bands
+  (.hdr), or select the set of individual band files that form the multiband image » + Browse...
+- Option « Select label image (classified image) » + Browse...
+- Bouton Execute et zone d'affichage des scores.
+- Supprimés : champ de la taille de l'ES, champs Image 1/2/3 fixes.
+- Le calcul s'exécute sur un thread séparé : la fenêtre reste réactive avec les grandes images.
+
+
+7. VÉRIFICATIONS EFFECTUÉES (sur le PC, SDK .NET 10.0.401)
+----------------------------------------------------------
+- Compilation Debug et publication Release : 0 avertissement, 0 erreur ; exécutable
+  Executable\IFS.exe (fichier unique, Windows 64 bits, sans .NET requis).
+- 91 tests automatiques réussis, 0 échec, compilant le MÊME MainWindow.xaml(.cs) :
+  * exemple chiffré à 3 bandes et 3 classes (F = 16,667 ; 0,167 ; 10,667 ; poids 0,60606061 ;
+    0,00606061 ; 0,38787879) lu en PNG 8 bits, TIFF 16 bits, TIFF 16 bits signé, TIFF flottant,
+    TIFF multipage, BMP et ENVI (9 types de données, BSQ/BIL/BIP, ordre des octets, en-tête
+    décalé) ; étiquettes couleur, à palette, en niveaux de gris 8 et 16 bits et ENVI ;
+  * données aléatoires 20 x 20 (3 bandes) et 37 x 23 (6 bandes) comparées à un calcul de
+    référence indépendant ;
+  * cas limites : classe d'un pixel, bande constante, bande parfaitement séparatrice, une seule
+    classe, tailles différentes, valeur NaN, fichiers ENVI tronqués, absents ou invalides ;
+  * fichier des scores, dossier « Scores of Bands », chargement de l'interface ;
+  * performances : 1000 x 1000 pixels, 20 bandes : environ 1 seconde.
+- Essai réel de l'exécutable publié : image ENVI .hdr, puis 3 fichiers PNG sélectionnés dans le
+  désordre, avec une image classée PNG : scores exacts, fichier écrit et message affiché.
+
+
+8. REMARQUES ET LIMITES
+-----------------------
+- Pixels non classés : si l'image classée contient une valeur « non classé » ou un fond (par
+  exemple la valeur 0 d'une vérité terrain), ces pixels forment une classe à part entière. Il faut
+  donc utiliser une image entièrement classée, comme le prévoit la méthode.
+- Les GeoTIFF contenant plusieurs bandes dans une même page, et les TIFF en entiers 32 bits ou en
+  flottant 64 bits, ne sont pas lisibles par le décodeur d'images de Windows : les convertir au
+  format ENVI (QGIS : Exporter > Enregistrer sous... > format ENVI ; ou gdal_translate -of ENVI).
+- Une bande contenant des valeurs NaN (sans donnée) est refusée avec un message.
+- Le F-score évalue chaque bande séparément et ne tient pas compte de la redondance entre bandes
+  (limite connue de la méthode, Chen et Lin) : deux bandes très corrélées peuvent toutes deux
+  obtenir un score élevé.

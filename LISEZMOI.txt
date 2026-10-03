@@ -1,0 +1,49 @@
+IFS - Improved F-Score Calculation Program - version 2 (projet .NET 10 pour VS Code)
+corrigé le 01-01-2019
+==================================================================================
+
+Contenu du dossier
+  IFS.sln                  solution
+  global.json              SDK .NET 10 (la version 10.0.x la plus récente installée)
+  .vscode\                 tâches (build, publish, clean), lancement F5, extensions recommandées
+  IFS\                     code source : MainWindow.xaml, MainWindow.xaml.cs, App.xaml, App.xaml.cs, IFS.csproj
+  RAPPORT_MODIFICATIONS.txt  description de chaque modification et des incohérences corrigées
+  Scores of Bands\         fichiers des scores (créé automatiquement à la première exécution)
+  Executable\              exécutable autonome (créé par la publication, voir ci-dessous)
+
+Prérequis (une seule fois)
+  - SDK .NET 10 : https://dotnet.microsoft.com/download (déjà installé si les projets AHP, PROMETHEE... compilent)
+  - VS Code avec l'extension C# Dev Kit (proposée automatiquement à l'ouverture du dossier)
+
+1. Compiler et exécuter dans VS Code
+  1. Fichier > Ouvrir le dossier... > choisir ce dossier (celui qui contient IFS.sln).
+  2. F5 : compile puis lance le programme (mode Debug).
+     Compiler seulement : Ctrl+Maj+B (tâche « build »).
+
+   Ou dans un terminal ouvert dans ce dossier :
+     dotnet build IFS\IFS.csproj
+     dotnet run --project IFS\IFS.csproj
+
+2. Utiliser le programme
+  1. « Select a multiband image » > Browse... :
+       - soit UN fichier ENVI .hdr contenant toutes les bandes (le fichier de données doit être
+         dans le même dossier : même nom sans extension, ou .img, .dat, .raw, .bsq, .bil, .bip) ;
+       - soit TOUS les fichiers des bandes (sélection multiple avec Ctrl ou Maj) : TIFF, PNG,
+         BMP, GIF, JPEG, en 8 bits, 16 bits ou flottant. Les bandes sont numérotées dans l'ordre
+         des noms de fichiers (B1, B2, ..., B10). Un TIFF multipage donne une bande par page.
+  2. « Select label image (classified image) » > Browse... : l'image classée (TIFF, PNG, BMP,
+     GIF ou ENVI .hdr). Chaque couleur (ou valeur) distincte est une classe. Éviter le JPEG.
+  3. Execute.
+  Les scores normalisés (entre 0 et 1, de somme 1) s'affichent et sont enregistrés dans :
+     Scores of Bands\IFS_Scores_<nom de l'image>.txt
+  Le fichier contient aussi une ligne de poids prête à coller dans les programmes AHP,
+  PROMETHEE, TOPSIS... (format 0,45;0,35;0,20).
+
+3. Créer l'exécutable autonome (utilisable sans VS Code ni .NET sur la machine cible)
+  Dans VS Code : Terminal > Exécuter la tâche... > publish
+  Ou dans un terminal ouvert dans ce dossier :
+     dotnet publish IFS\IFS.csproj -c Release -o Executable
+  Exécutable : Executable\IFS.exe (un seul fichier, Windows 64 bits)
+  Résultats  : Scores of Bands (juste sous ce dossier) ;
+               si l'exécutable est copié seul ailleurs : à côté de l'exécutable.
+

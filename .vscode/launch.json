@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Lancer IFS (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/IFS/bin/Debug/net10.0-windows/win-x64/IFS.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/IFS/bin/Debug/net10.0-windows/win-x64",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

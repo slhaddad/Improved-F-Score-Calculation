@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- corrigé le 01-01-2019 -->
+  <!-- IFS : Improved F-Score Calculation Program (SDK .NET 10, WPF), même configuration que le projet AHP -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>IFS</RootNamespace>
+    <AssemblyName>IFS</AssemblyName>
+    <AssemblyTitle>Improved F-Score Calculation Program</AssemblyTitle>
+    <Product>Improved F-Score Calculation Program</Product>
+    <Version>2.0.0</Version>
+  </PropertyGroup>
+
+  <!-- Publication : exécutable Windows 64 bits autonome, en un seul fichier (aucun .NET requis sur la machine cible) -->
+  <PropertyGroup>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+</Project>
