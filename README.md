@@ -10,7 +10,7 @@ into normalized band weights.
 | **Programming language** | C# |
 | **Framework** | .NET 10 (`net10.0-windows`), WPF user interface |
 | **Platform** | Windows 64‑bit |
-| **Executable** | `IFS.exe`: a single self-contained file that runs without .NET installed (see *Releases*) |
+| **Executable** | [`Executable/IFS.exe`](Executable/IFS.exe): a single self-contained file that runs without .NET installed |
 
 ## The Improved F‑Score technique
 
@@ -69,6 +69,12 @@ Sum of the scores : 1.00000000
 The file also contains the weights in a ready-to-paste form (`0,60606061;0,00606061;0,38787879`),
 the raw Improved F‑Score of each band, and the list of classes with their number of pixels.
 
+## Run the program without compiling
+
+Download [`Executable/IFS.exe`](Executable/IFS.exe) (click the file, then **Download raw file**) and double-click it.
+No installation is required. Windows SmartScreen may ask for confirmation the first time, because the
+executable is not signed: click **More info**, then **Run anyway**.
+
 ## Build and run
 
 Requirements: Windows, [.NET 10 SDK](https://dotnet.microsoft.com/download), and optionally VS Code
@@ -92,6 +98,7 @@ global.json                 .NET SDK version
 IFS\                        source code (MainWindow.xaml, MainWindow.xaml.cs, App.xaml, IFS.csproj)
 LISEZMOI.txt                instructions (French)
 RAPPORT_MODIFICATIONS.txt   change report of version 2 (French)
+Executable\IFS.exe          ready-to-use Windows 64-bit executable
 ```
 
 ## Notes
